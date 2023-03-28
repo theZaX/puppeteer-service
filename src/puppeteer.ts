@@ -1,16 +1,16 @@
-import type { Browser, Viewport } from 'puppeteer-core';
-import puppeteer from 'puppeteer-core';
-import { config } from './config';
-import { validateUrl } from './url.utils';
+import type { Browser, Viewport } from "puppeteer-core";
+import puppeteer from "puppeteer-core";
+import { config } from "./config";
+import { validateUrl } from "./url.utils";
 
 const inBrowser = async <T>(callback: (browser: Browser) => T) => {
   const browser = await puppeteer.launch({
     executablePath: config.chromeBinaryPath,
     // https://github.com/buildkite/docker-puppeteer/blob/master/example/integration-tests/index.test.js
     args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
     ],
   });
 
@@ -26,7 +26,7 @@ export const htmlToPdf = async (html: string) => {
     const page = await browser.newPage();
     await page.setContent(html);
 
-    return await page.pdf({ format: 'a4', printBackground: true });
+    return await page.pdf({ format: "a4", printBackground: true });
   });
 };
 
@@ -36,7 +36,7 @@ export const htmlToPng = async (html: string, viewport: Viewport) => {
     await page.setContent(html);
     await page.setViewport(viewport);
 
-    return await page.screenshot({ type: 'png' });
+    return await page.screenshot({ type: "png" });
   });
 };
 
@@ -48,17 +48,20 @@ export const urlToPng = async (url: string, viewport: Viewport) => {
     await page.goto(url);
     await page.setViewport(viewport);
 
-    return await page.screenshot({ type: 'png' });
+    return await page.screenshot({ type: "png" });
   });
 };
 
-export const urlToPdf = async (url: string) => {
+export const urlToPdf = async (url: string, format: string = "a4") => {
   validateUrl(url);
 
   return await inBrowser(async (browser) => {
     const page = await browser.newPage();
     await page.goto(url);
 
-    return await page.pdf({ format: 'a4', printBackground: true });
+    // wait for the page to load
+    await page.waitForTimeout(1500);
+
+    return await page.pdf({ format, printBackground: true });
   });
 };
