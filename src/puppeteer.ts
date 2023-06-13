@@ -52,7 +52,7 @@ export const urlToPng = async (url: string, viewport: Viewport) => {
   });
 };
 
-export const urlToPdf = async (url: string, format: any = "a4") => {
+export const urlToPdf = async (url: string, format: any = "legal") => {
   validateUrl(url);
 
   return await inBrowser(async (browser) => {
@@ -61,6 +61,7 @@ export const urlToPdf = async (url: string, format: any = "a4") => {
       waitUntil: "networkidle2",
     });
 
-    return await page.pdf({ format, printBackground: true });
+    return await page.pdf({ format, printBackground: true, landscape: true });
   });
 };
+``;
