@@ -52,7 +52,7 @@ export const urlToPng = async (url: string, viewport: Viewport) => {
   });
 };
 
-export const urlToPdf = async (url: string, format: any = "legal") => {
+export const urlToPdf = async (url: string, format: any = "letter") => {
   validateUrl(url);
 
   return await inBrowser(async (browser) => {
