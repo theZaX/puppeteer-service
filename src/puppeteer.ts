@@ -58,7 +58,7 @@ export const urlToPdf = async (url: string, format: any = "letter") => {
   return await inBrowser(async (browser) => {
     const page = await browser.newPage();
     await page.goto(url, {
-      waitUntil: "networkidle2",
+      waitUntil: "networkidle0",
     });
 
     return await page.pdf({ format, printBackground: true, landscape: true });
