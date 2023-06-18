@@ -64,4 +64,16 @@ export const urlToPdf = async (url: string, format: any = "letter") => {
     return await page.pdf({ format, printBackground: true, landscape: true });
   });
 };
-``;
+
+export const urlToHtml = async (url: string, format: any = "letter") => {
+  validateUrl(url);
+
+  return await inBrowser(async (browser) => {
+    const page = await browser.newPage();
+    await page.goto(url, {
+      waitUntil: "networkidle0",
+    });
+
+    return await page.content();
+  });
+};

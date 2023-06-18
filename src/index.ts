@@ -1,6 +1,12 @@
 import fastify from "fastify";
 import { config } from "./config";
-import { htmlToPdf, htmlToPng, urlToPdf, urlToPng } from "./puppeteer";
+import {
+  htmlToPdf,
+  htmlToPng,
+  urlToHtml,
+  urlToPdf,
+  urlToPng,
+} from "./puppeteer";
 import {
   htmlPdfRequest,
   htmlPngRequest,
@@ -55,10 +61,19 @@ server.post<{ Body: { url: string; format?: string } }>(
   }
 );
 
+server.post<{ Body: { url: string; format?: string } }>(
+  "/url/html",
+  urlPdfRequest,
+  (request) => {
+    const url = request.body.url;
+    const format = request.body.format;
+    return urlToHtml(url, format);
+  }
+);
+
 const startServer = async () => {
   try {
     await server.listen(config.port, "0.0.0.0");
-
     server.log.info(`Puppeteer service API listening on ${config.port}`);
   } catch (err: unknown) {
     server.log.error(err);
