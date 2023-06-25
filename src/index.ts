@@ -64,10 +64,13 @@ server.post<{ Body: { url: string; format?: string } }>(
 server.post<{ Body: { url: string; format?: string } }>(
   "/url/html",
   urlPdfRequest,
-  (request) => {
+  async (request, response) => {
     const url = request.body.url;
     const format = request.body.format;
-    return urlToHtml(url, format);
+    const html = await urlToHtml(url, format);
+    // return this as an html
+
+    response.type("text/html").send(html);
   }
 );
 
