@@ -70,9 +70,20 @@ export const urlToHtml = async (url: string, format: any = "letter") => {
 
   return await inBrowser(async (browser) => {
     const page = await browser.newPage();
-    await page.goto(url, {
-      waitUntil: "networkidle0",
-    });
+
+    try {
+      await page.goto(url, {
+        waitUntil: "networkidle0",
+        timeout: 15000, // 10 seconds
+      });
+    } catch (error) {
+      if (error instanceof puppeteer.errors.TimeoutError) {
+        console.log("Page load timed out, but proceeding to get the content.");
+      } else {
+        console.error("An unexpected error occurred:", error);
+        throw error;
+      }
+    }
 
     return await page.content();
   });
