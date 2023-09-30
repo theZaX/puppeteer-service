@@ -19,7 +19,7 @@ COPY package-lock.json .
 
 FROM install as build
 
-RUN npm ci && npm cache clean --force
+RUN npm ci
 
 COPY . .
 
@@ -35,7 +35,7 @@ ENV NODE_ENV=production
 
 COPY --from=build /app/build /app/build
 
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production
 
 EXPOSE 3000
 
