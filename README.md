@@ -157,3 +157,13 @@ yarn start:prod
 ### Versioning
 
 We use semver for versioning. Release should be tagged with vX.Y.Z, so the version is picked up by Docker Hub autobuild.
+
+### Extra Instructions - Mindsmith
+
+If on MX mac download chromium using this guide https://rickynguyen.medium.com/puppeteer-for-apple-m1-43a5c31e4f9d
+
+Put the output of `which chromium` into the `.env` as the `CHROME_BINARY_PATH` variable
+
+Also put put port `8080` into the `.env` as the `SERVER_PORT` variable
+
+Hotreload dev using `bun --hot src/index.ts`

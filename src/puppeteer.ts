@@ -2,6 +2,7 @@ import type { Browser, Viewport } from "puppeteer-core";
 import puppeteer from "puppeteer-core";
 import { config } from "./config";
 import { validateUrl } from "./url.utils";
+import storage from "./clients/storage";
 
 const inBrowser = async <T>(callback: (browser: Browser) => T) => {
   const browser = await puppeteer.launch({
@@ -52,10 +53,14 @@ export const urlToPng = async (url: string, viewport: Viewport) => {
   });
 };
 
-export const urlToPdf = async (url: string, format: any = "letter") => {
+export const urlToPdf = async (
+  url: string,
+  format: any = "letter",
+  storageKey: string
+) => {
   validateUrl(url);
 
-  return await inBrowser(async (browser) => {
+  const data = await inBrowser(async (browser) => {
     const page = await browser.newPage();
     await page.goto(url, {
       waitUntil: "networkidle0",
@@ -63,6 +68,20 @@ export const urlToPdf = async (url: string, format: any = "letter") => {
 
     return await page.pdf({ format, printBackground: true, landscape: true });
   });
+
+  const buffer = data;
+
+  const assetRef = storage.bucket("mindsmith").file(storageKey);
+
+  console.log("saving");
+
+  await assetRef.save(buffer, {
+    contentType: "application/pdf",
+  });
+
+  return {
+    url: `https://storage.googleapis.com/mindsmith/${storageKey}`,
+  };
 };
 
 export const urlToHtml = async (url: string, format: any = "letter") => {

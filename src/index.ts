@@ -24,7 +24,7 @@ server.post<{ Body: { html: string } }>(
   htmlPdfRequest,
   (request) => {
     const html = request.body.html;
-
+    console.log(html);
     return htmlToPdf(html);
   }
 );
@@ -51,13 +51,16 @@ server.post<{ Body: { url: string; viewport: Viewport } }>(
   }
 );
 
-server.post<{ Body: { url: string; format?: string } }>(
+server.post<{ Body: { url: string; format?: string; storageKey: string } }>(
   "/url/pdf",
   urlPdfRequest,
   (request) => {
+    console.log(request.body, "url pdf request");
+
     const url = request.body.url;
     const format = request.body.format;
-    return urlToPdf(url, format);
+    const storageKey = request.body.storageKey;
+    return urlToPdf(url, format, storageKey);
   }
 );
 
