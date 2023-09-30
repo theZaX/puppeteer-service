@@ -66,7 +66,7 @@ export const urlToPdf = async (
     try {
       await page.goto(url, {
         waitUntil: "networkidle2",
-        timeout: 15000, // 10 seconds
+        timeout: 25000, // 10 seconds
       });
     } catch (error) {
       if (error instanceof puppeteer.errors.TimeoutError) {
