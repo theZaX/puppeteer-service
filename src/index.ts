@@ -1,4 +1,5 @@
-import fastify from "fastify";
+import express from "express";
+import { z } from "zod";
 import { config } from "./config";
 import {
   htmlToPdf,
@@ -7,82 +8,114 @@ import {
   urlToPdf,
   urlToPng,
 } from "./puppeteer";
-import {
-  htmlPdfRequest,
-  htmlPngRequest,
-  urlPdfRequest,
-  urlPngRequest,
-} from "./schemas";
-import type { Viewport } from "puppeteer-core";
+import { urlsToPDF } from "./urlsToPDF";
 
-const server = fastify({
-  logger: true,
+const app = express();
+app.use(express.json());
+
+const viewportSchema = z.object({
+  width: z.number(),
+  height: z.number(),
 });
 
-server.post<{ Body: { html: string } }>(
-  "/html/pdf",
-  htmlPdfRequest,
-  (request) => {
-    const html = request.body.html;
-    console.log(html);
-    return htmlToPdf(html);
+const htmlPdfRequestSchema = z.object({
+  html: z.string(),
+});
+
+const htmlPngRequestSchema = z.object({
+  html: z.string(),
+  viewport: viewportSchema,
+});
+
+const urlPngRequestSchema = z.object({
+  url: z.string(),
+  viewport: viewportSchema,
+});
+
+const urlPdfRequestSchema = z.object({
+  url: z.string(),
+  format: z.string().optional(),
+  storageKey: z.string(),
+});
+
+const urlHtmlRequestSchema = z.object({
+  url: z.string(),
+  format: z.string().optional(),
+});
+
+app.post("/html/pdf", async (req, res) => {
+  const result = htmlPdfRequestSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json(result.error);
   }
-);
+  const { html } = result.data;
+  const pdf = await htmlToPdf(html);
 
-server.post<{ Body: { html: string; viewport: Viewport } }>(
-  "/html/png",
-  htmlPngRequest,
-  (request) => {
-    const html = request.body.html;
-    const viewport = request.body.viewport;
+  res.json(pdf);
+});
 
-    return htmlToPng(html, viewport);
+app.post("/html/png", async (req, res) => {
+  const result = htmlPngRequestSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json(result.error);
   }
-);
+  const { html, viewport } = result.data;
+  const png = await htmlToPng(html, viewport);
+  res.json(png);
+});
 
-server.post<{ Body: { url: string; viewport: Viewport } }>(
-  "/url/png",
-  urlPngRequest,
-  (request) => {
-    const url = request.body.url;
-    const viewport = request.body.viewport;
-
-    return urlToPng(url, viewport);
+app.post("/url/png", async (req, res) => {
+  const result = urlPngRequestSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json(result.error);
   }
-);
+  const { url, viewport } = result.data;
+  const png = await urlToPng(url, viewport);
+  res.json(png);
+});
 
-server.post<{ Body: { url: string; format?: string; storageKey: string } }>(
-  "/url/pdf",
-  urlPdfRequest,
-  (request) => {
-    console.log(request.body, "url pdf request");
-
-    const url = request.body.url;
-    const format = request.body.format;
-    const storageKey = request.body.storageKey;
-    return urlToPdf(url, format, storageKey);
+app.post("/url/pdf", async (req, res) => {
+  const result = urlPdfRequestSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json(result.error);
   }
-);
+  const { url, format, storageKey } = result.data;
+  const pdf = await urlToPdf(url, format, storageKey);
+  res.json(pdf);
+});
 
-server.post<{ Body: { url: string; format?: string } }>(
-  "/url/html",
-  urlPdfRequest,
-  async (request, response) => {
-    const url = request.body.url;
-    const format = request.body.format;
-    const html = await urlToHtml(url, format);
-    // return this as an html
+const urlsPdfSchema = z.object({
+  urls: z.array(z.string()),
+  storageKey: z.string(),
+});
 
-    response.type("text/html").send(html);
+app.post("/urls/pdf", async (req, res) => {
+  const result = urlsPdfSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json(result.error);
   }
-);
+  const { urls, storageKey } = result.data;
+  const pdf = await urlsToPDF(urls, storageKey);
+  res.json(pdf);
+});
+
+app.post("/url/html", async (req, res) => {
+  const result = urlHtmlRequestSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json(result.error);
+  }
+  const { url, format } = result.data;
+  const html = await urlToHtml(url, format);
+  res.type("text/html").send(html);
+});
 
 const startServer = async () => {
   try {
-    await server.listen(config.port, "0.0.0.0");
-    server.log.info(`Puppeteer service API listening on ${config.port}`);
-  } catch (err: unknown) {
-    server.log.error(err);
+    app.listen(Number(config.port), "0.0.0.0", () => {
+      console.log(`Puppeteer service API listening on ${config.port}`);
+    });
+  } catch (err) {
+    console.error(err);
     process.exit(1);
   }
 };
