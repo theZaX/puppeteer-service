@@ -9,13 +9,14 @@ export const smartURLToPDF = async (url: string, page: Page) => {
     timeout: 25000, // 10 seconds
   });
 
-  await page.waitForTimeout(3000); // Wait for an additional 3 seconds
+  await page.waitForTimeout(5000); // Wait for an additional 3 seconds
 
   let height = await page.evaluate(() => document.body.scrollHeight);
 
   return await page.pdf({
     printBackground: true,
     height: height + "px",
+    width: "1066px",
   });
 };
 
@@ -46,7 +47,7 @@ export const urlsToPDF = async (urls: string[], storageKey: string) => {
       const chunk = urls.slice(i, i + 10);
       const pdfPromises = chunk.map(async (url) => {
         const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 720, isLandscape: true });
+        await page.setViewport({ width: 1066, height: 600, isLandscape: true });
         const pdf = await smartURLToPDF(url, page);
         await page.close();
 
