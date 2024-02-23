@@ -6,10 +6,10 @@ import { PDFDocument } from "pdf-lib";
 export const smartURLToPDF = async (url: string, page: Page) => {
   await page.goto(url, {
     waitUntil: "networkidle0",
-    timeout: 25000, // 10 seconds
+    timeout: 5000, // 10 seconds
   });
 
-  await page.waitForTimeout(5000); // Wait for an additional 3 seconds
+  await page.waitForTimeout(2000); // Wait for an additional 3 seconds
 
   let height = await page.evaluate(() => document.body.scrollHeight);
 
@@ -18,6 +18,15 @@ export const smartURLToPDF = async (url: string, page: Page) => {
     height: height + "px",
     width: "1066px",
   });
+};
+
+const smartURLToPDFWithRetry = async (url: string, page: Page) => {
+  try {
+    return await smartURLToPDF(url, page);
+  } catch (e) {
+    console.log(`Failed to process ${url}, retrying...`);
+    return await smartURLToPDF(url, page);
+  }
 };
 
 const mergePDFs = async (pdfs: Buffer[]) => {
@@ -43,12 +52,12 @@ const mergePDFs = async (pdfs: Buffer[]) => {
 export const urlsToPDF = async (urls: string[], storageKey: string) => {
   const data = await inBrowser(async (browser) => {
     const buffers = [];
-    for (let i = 0; i < urls.length; i += 10) {
+    for (let i = 0; i < urls.length; i += 20) {
       const chunk = urls.slice(i, i + 10);
       const pdfPromises = chunk.map(async (url) => {
         const page = await browser.newPage();
         await page.setViewport({ width: 1066, height: 600, isLandscape: true });
-        const pdf = await smartURLToPDF(url, page);
+        const pdf = await smartURLToPDFWithRetry(url, page);
         await page.close();
 
         console.log(`Finished processing ${url}`);
@@ -64,6 +73,8 @@ export const urlsToPDF = async (urls: string[], storageKey: string) => {
   const mergedPdf = await mergePDFs(data);
 
   const assetRef = storage.bucket("mindsmith").file(storageKey);
+
+  console.log(`Saving to ${storageKey}`);
 
   await assetRef.save(mergedPdf, {
     contentType: "application/pdf",
