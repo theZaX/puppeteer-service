@@ -21,12 +21,18 @@ export const smartURLToPDF = async (url: string, page: Page) => {
 };
 
 const smartURLToPDFWithRetry = async (url: string, page: Page) => {
-  try {
-    return await smartURLToPDF(url, page);
-  } catch (e) {
-    console.log(`Failed to process ${url}, retrying...`);
-    return await smartURLToPDF(url, page);
+  let retries = 2;
+  while (retries > 0) {
+    try {
+      return await smartURLToPDF(url, page);
+    } catch (e) {
+      console.log(
+        `Failed to process ${url}, retrying... (${3 - retries} attempt)`
+      );
+      retries--;
+    }
   }
+  throw new Error(`Failed to process ${url} after multiple retries.`);
 };
 
 const mergePDFs = async (pdfs: Buffer[]) => {
@@ -53,10 +59,10 @@ export const urlsToPDF = async (urls: string[], storageKey: string) => {
   const data = await inBrowser(async (browser) => {
     const buffers = [];
     for (let i = 0; i < urls.length; i += 20) {
-      const chunk = urls.slice(i, i + 10);
+      const chunk = urls.slice(i, i + 20);
       const pdfPromises = chunk.map(async (url) => {
         const page = await browser.newPage();
-        await page.setViewport({ width: 1066, height: 600, isLandscape: true });
+        await page.setViewport({ width: 1066, height: 700, isLandscape: true });
         const pdf = await smartURLToPDFWithRetry(url, page);
         await page.close();
 
