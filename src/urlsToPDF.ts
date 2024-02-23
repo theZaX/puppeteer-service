@@ -6,8 +6,10 @@ import { PDFDocument } from "pdf-lib";
 export const smartURLToPDF = async (url: string, page: Page) => {
   await page.goto(url, {
     waitUntil: "networkidle2",
-    timeout: 10000, // 10 seconds
+    timeout: 12000, // 10 seconds
   });
+
+  await page.waitForTimeout(2000); // Wait for 1 second
 
   let height = await page.evaluate(() => document.body.scrollHeight);
 
@@ -56,8 +58,8 @@ const mergePDFs = async (pdfs: Buffer[]) => {
 export const urlsToPDF = async (urls: string[], storageKey: string) => {
   const data = await inBrowser(async (browser) => {
     const buffers = [];
-    for (let i = 0; i < urls.length; i += 15) {
-      const chunk = urls.slice(i, i + 15);
+    for (let i = 0; i < urls.length; i += 18) {
+      const chunk = urls.slice(i, i + 18);
       const pdfPromises = chunk.map(async (url) => {
         const page = await browser.newPage();
         await page.setViewport({ width: 1066, height: 700, isLandscape: true });
