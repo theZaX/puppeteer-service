@@ -58,8 +58,8 @@ const mergePDFs = async (pdfs: Buffer[]) => {
 export const urlsToPDF = async (urls: string[], storageKey: string) => {
   const data = await inBrowser(async (browser) => {
     const buffers = [];
-    for (let i = 0; i < urls.length; i += 18) {
-      const chunk = urls.slice(i, i + 18);
+    for (let i = 0; i < urls.length; i += 12) {
+      const chunk = urls.slice(i, i + 12);
       const pdfPromises = chunk.map(async (url) => {
         const page = await browser.newPage();
         await page.setViewport({ width: 1066, height: 700, isLandscape: true });
