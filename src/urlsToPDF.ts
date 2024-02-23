@@ -5,11 +5,11 @@ import { PDFDocument } from "pdf-lib";
 
 export const smartURLToPDF = async (url: string, page: Page) => {
   await page.goto(url, {
-    waitUntil: "networkidle0",
+    waitUntil: "networkidle2",
     timeout: 5000, // 10 seconds
   });
 
-  await page.waitForTimeout(2000); // Wait for an additional 3 seconds
+  await page.waitForTimeout(3000); // Wait for an additional 3 seconds
 
   let height = await page.evaluate(() => document.body.scrollHeight);
 
