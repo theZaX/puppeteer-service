@@ -48,8 +48,10 @@ export const urlToPdf = async (
     try {
       await page.goto(url, {
         waitUntil: "networkidle2",
-        timeout: 25000, // 10 seconds
+        timeout: 12000, // 10 seconds
       });
+
+      await page.waitForTimeout(2000); // Wait for 1 second
     } catch (error) {
       if (error instanceof puppeteer.errors.TimeoutError) {
         console.log("Page load timed out, but proceeding to get the content.");
@@ -61,7 +63,7 @@ export const urlToPdf = async (
 
     console.log("rendering");
 
-    return await page.pdf({ format, printBackground: true, landscape: true });
+    return await page.pdf({ format, printBackground: true, landscape: false });
   });
 
   const buffer = data;
